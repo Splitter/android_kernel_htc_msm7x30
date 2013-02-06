@@ -1,0 +1,93 @@
+#!/bin/bash
+
+ARCH=arm
+TOOLCHAIN=~/android/Kernel/toolchains/bin/arm-eabi-
+BASE_DIR="$( cd "$( dirname "$0" )" && pwd )"
+DEFCONFIG=speedy_defconfig
+NUMJOBS=6
+OPTIMIZATION=-o2
+ZIPFILES=zip_template
+ZIPNAME="PW_JB_Speedy.zip"
+
+echo "*********************************************"
+echo "*****   AUTO BUILD & PACKAGE SCRIPT     *****"
+echo "*********************************************"
+
+
+echo ""
+echo "beginning build process......"
+
+echo ""
+echo "ACTION: make clean -j$NUMJOBS"
+make clean -j$NUMJOBS
+
+echo ""
+echo "ACTION: make $DEFCONFIG "
+make $DEFCONFIG
+
+echo ""
+echo "ACTION:"
+echo "make -j$NUMJOBS $OPTIMIZATION ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN"
+make -j$NUMJOBS $OPTIMIZATION ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN
+
+
+
+if [ -e arch/arm/boot/zImage ]; 
+	then
+		echo ""
+		echo "build finished......"
+		echo "beginning packaging process......"
+		echo ""
+		echo "ACTION: create working directory..."
+		rm -fr tmpdir
+		mkdir tmpdir
+
+		echo ""
+		echo "ACTION: copy package template to working directory..."
+		cp -a $ZIPFILES tmpdir/zipf
+
+		echo ""
+		echo "ACTION: copy kernel image over..."
+		cp arch/arm/boot/zImage tmpdir/zipf/kernel
+
+		echo ""
+		echo "ACTION: copying all modules over..."
+		for j in $(find . -name "*.ko"); do
+		    cp "${j}" tmpdir/zipf/system/lib/modules/
+		done
+
+		echo ""
+		echo "ACTION: creating CWM flashable zip..."
+
+		cd tmpdir/zipf
+		zip -r $ZIPNAME *
+		cp -R $ZIPNAME $BASE_DIR
+		cd ../../
+		rm -fr tmpdir
+
+		echo ""
+		echo ""
+		echo "ACTION: Zip $ZIPNAME built and placed in root dir..."
+		echo ""
+		echo ""
+
+
+		echo "*********************************************"
+		echo "*****   BUILD FINISHED!                 *****"
+		echo "*********************************************"
+	else 
+		echo ""
+		echo ""
+		echo "BUILD FAILED!@@!!@#!!@!"
+		echo ""
+		echo ""
+fi
+
+
+
+
+
+
+
+
+
