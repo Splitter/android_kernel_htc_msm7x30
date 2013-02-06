@@ -45,6 +45,9 @@ if [ -e arch/arm/boot/zImage ];
 		echo ""
 		echo "ACTION: copy package template to working directory..."
 		cp -a $ZIPFILES tmpdir/zipf
+		mkdir tmpdir/zipf/system
+		mkdir tmpdir/zipf/system/lib
+		mkdir tmpdir/zipf/system/lib/modules
 
 		echo ""
 		echo "ACTION: copy kernel image over..."
