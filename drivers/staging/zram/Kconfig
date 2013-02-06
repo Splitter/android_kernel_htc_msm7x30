@@ -4,22 +4,20 @@ config XVMALLOC
 
 config ZRAM
 	tristate "Compressed RAM block device support"
-	depends on BLOCK && SYSFS
+	depends on BLOCK
 	select XVMALLOC
-	select LZO_COMPRESS
-	select LZO_DECOMPRESS
 	default n
 	help
-	  Creates virtual block devices called /dev/zramX (X = 0, 1, ...).
-	  Pages written to these disks are compressed and stored in memory
-	  itself. These disks allow very fast I/O and compression provides
-	  good amounts of memory savings.
+	Creates virtual block devices called /dev/zramX (X = 0, 1, ...).
+	Pages written to these disks are compressed and stored in memory
+	itself. These disks allow very fast I/O and compression provides
+	good amounts of memory savings.
 
-	  It has several use cases, for example: /tmp storage, use as swap
-	  disks and maybe many more.
+	It has several use cases, for example: /tmp storage, use as swap
+	disks and maybe many more.
 
-	  See zram.txt for more information.
-	  Project home: http://compcache.googlecode.com/
+	See zram.txt for more information.
+	Project home: http://compcache.googlecode.com/
 
 config ZRAM_NUM_DEVICES
 	int "Default number of zram devices"
@@ -52,4 +50,17 @@ config ZRAM_DEFAULT_DISKSIZE
 	default 100663296
 	help
 	  Set default zram disk size (default ~ 96MB)
+	  
+config ZRAM_LZO
+       bool "LZO compression"
+       default y
+       depends on ZRAM
+       select LZO_COMPRESS
+       select LZO_DECOMPRESS
+
+config ZRAM_SNAPPY
+       bool "Snappy compression"
+       depends on ZRAM
+       select SNAPPY_COMPRESS
+       select SNAPPY_DECOMPRESS
 
