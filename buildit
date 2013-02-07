@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "*********************************************"
+echo "*****   AUTO BUILD & PACKAGE SCRIPT     *****"
+echo "*********************************************"
+
+
 ARCH=arm
 TOOLCHAIN=~/android/Kernel/toolchains/bin/arm-eabi-
 BASE_DIR="$( cd "$( dirname "$0" )" && pwd )"
@@ -7,19 +12,27 @@ DEFCONFIG=speedy_defconfig
 NUMJOBS=6
 OPTIONS=-o2
 ZIPFILES=zip_template
-ZIPNAME="PW_JB_Speedy.zip"
+ZIPPREFIX="JB-Speedy"
 
 
-echo "*********************************************"
-echo "*****   AUTO BUILD & PACKAGE SCRIPT     *****"
-echo "*********************************************"
+#Pull local version from defconfig and append to zip file name
+while read line; do
+  if [[ $line == *"CONFIG_LOCALVERSION="* ]]  
+  	then  	
+  		VERSION=(${line//=/ })
+  		VERSION=${VERSION[1]}
+  		VERSION=${VERSION:1:(${#VERSION}-2)} 
+  fi  
+done < ./arch/arm/configs/$DEFCONFIG
+
+ZIPNAME=$ZIPPREFIX$VERSION".zip"
 
 
 echo ""
 echo "beginning build process......"
 
-echo $1
 
+#Check if 'debug' is passed as arguement
 if [[ $1 -eq 0 && $1 == debug ]]
 	then #DEBUG ENABLED
 		echo ""
@@ -48,7 +61,7 @@ if [[ $1 -eq 0 && $1 == debug ]]
 		echo "make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN"
 		make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN
 
-
+		#Make sure kernel has been created before trying to create flashable zip
 		if [ -e arch/arm/boot/zImage ]; 
 			then
 				echo ""
@@ -95,7 +108,9 @@ if [[ $1 -eq 0 && $1 == debug ]]
 				echo "*********************************************"
 				echo "*****   BUILD FINISHED!                 *****"
 				echo "*********************************************"
-			else 
+			
+				
+			else	#Made it through build process and kernel image wasn't created
 				echo ""
 				echo ""
 				echo "BUILD FAILED!@@!!@#!!@!"
