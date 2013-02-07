@@ -68,9 +68,9 @@ static void strip(char *str)
 static void check_stdin(void)
 {
 	if (!valid_stdin) {
-		printf(_("aborted!\n\n"));
-		printf(_("Console input/output is redirected. "));
-		printf(_("Run 'make oldconfig' to update configuration.\n\n"));
+		printf("%s",_("aborted!\n\n"));
+		printf("%s",_("Console input/output is redirected. "));
+		printf("%s",_("Run 'make oldconfig' to update configuration.\n\n"));
 		exit(1);
 	}
 }
@@ -80,7 +80,7 @@ static int conf_askvalue(struct symbol *sym, const char *def)
 	enum symbol_type type = sym_get_type(sym);
 
 	if (!sym_has_value(sym))
-		printf(_("(NEW) "));
+		printf("%s",_("(NEW) "));
 
 	line[0] = '\n';
 	line[1] = 0;
@@ -156,14 +156,14 @@ static int conf_string(struct menu *menu)
 static int conf_sym(struct menu *menu)
 {
 	struct symbol *sym = menu->sym;
-	int type;
+	//int type;
 	tristate oldval, newval;
 
 	while (1) {
 		printf("%*s%s ", indent - 1, "", _(menu->prompt->text));
 		if (sym->name)
 			printf("(%s) ", sym->name);
-		type = sym_get_type(sym);
+		//type = sym_get_type(sym);
 		putchar('[');
 		oldval = sym_get_tristate_value(sym);
 		switch (oldval) {
@@ -178,14 +178,14 @@ static int conf_sym(struct menu *menu)
 			break;
 		}
 		if (oldval != no && sym_tristate_within_range(sym, no))
-			printf("/n");
+			printf("%s","/n");
 		if (oldval != mod && sym_tristate_within_range(sym, mod))
-			printf("/m");
+			printf("%s","/m");
 		if (oldval != yes && sym_tristate_within_range(sym, yes))
-			printf("/y");
+			printf("%s","/y");
 		if (menu_has_help(menu))
-			printf("/?");
-		printf("] ");
+			printf("%s","/?");
+		printf("%s","] ");
 		if (!conf_askvalue(sym, sym_get_string_value(sym)))
 			return 0;
 		strip(line);
@@ -228,11 +228,11 @@ static int conf_choice(struct menu *menu)
 {
 	struct symbol *sym, *def_sym;
 	struct menu *child;
-	int type;
+	//int type;
 	bool is_new;
 
 	sym = menu->sym;
-	type = sym_get_type(sym);
+	//type = sym_get_type(sym);
 	is_new = !sym_has_value(sym);
 	if (sym_is_changable(sym)) {
 		conf_sym(menu);
@@ -281,18 +281,18 @@ static int conf_choice(struct menu *menu)
 			if (child->sym->name)
 				printf(" (%s)", child->sym->name);
 			if (!sym_has_value(child->sym))
-				printf(_(" (NEW)"));
-			printf("\n");
+				printf("%s",_(" (NEW)"));
+			printf("%s","\n");
 		}
 		printf(_("%*schoice"), indent - 1, "");
 		if (cnt == 1) {
-			printf("[1]: 1\n");
+			printf("%s","[1]: 1\n");
 			goto conf_childs;
 		}
 		printf("[1-%d", cnt);
 		if (menu_has_help(menu))
-			printf("?");
-		printf("]: ");
+			printf("%s","?");
+		printf("%s","]: ");
 		switch (input_mode) {
 		case ask_new:
 		case ask_silent:
@@ -419,7 +419,7 @@ static void check_conf(struct menu *menu)
 		if (sym_is_changable(sym) ||
 		    (sym_is_choice(sym) && sym_get_tristate_value(sym) == yes)) {
 			if (!conf_cnt++)
-				printf(_("*\n* Restart config...\n*\n"));
+				printf("%s",_("*\n* Restart config...\n*\n"));
 			rootEntry = menu_get_parent_menu(menu);
 			conf(rootEntry);
 		}
@@ -482,11 +482,11 @@ int main(int ac, char **av)
 			break;
 		}
 		case 'h':
-			printf(_("See README for usage info\n"));
+			printf("%s",_("See README for usage info\n"));
 			exit(0);
 			break;
 		default:
-			fprintf(stderr, _("See README for usage info\n"));
+			fprintf(stderr,"%s", _("See README for usage info\n"));
 			exit(1);
 		}
 	}
@@ -556,7 +556,7 @@ int main(int ac, char **av)
 		if (conf_get_changed()) {
 			name = getenv("KCONFIG_NOSILENTUPDATE");
 			if (name && *name) {
-				fprintf(stderr,
+				fprintf(stderr,"%s",
 					_("\n*** Kernel configuration requires explicit update.\n\n"));
 				return 1;
 			}
@@ -600,16 +600,16 @@ int main(int ac, char **av)
 		 * All other commands are only used to generate a config.
 		 */
 		if (conf_get_changed() && conf_write(NULL)) {
-			fprintf(stderr, _("\n*** Error during writing of the kernel configuration.\n\n"));
+			fprintf(stderr,"%s", _("\n*** Error during writing of the kernel configuration.\n\n"));
 			exit(1);
 		}
 		if (conf_write_autoconf()) {
-			fprintf(stderr, _("\n*** Error during update of the kernel configuration.\n\n"));
+			fprintf(stderr,"%s", _("\n*** Error during update of the kernel configuration.\n\n"));
 			return 1;
 		}
 	} else {
 		if (conf_write(NULL)) {
-			fprintf(stderr, _("\n*** Error during writing of the kernel configuration.\n\n"));
+			fprintf(stderr,"%s", _("\n*** Error during writing of the kernel configuration.\n\n"));
 			exit(1);
 		}
 	}
@@ -624,5 +624,5 @@ int size;
 FILE *in;
 {
 if (fgets(str, size, in) == NULL)
-fprintf(stderr, "\nError in reading or end of file.\n");
+fprintf(stderr,"%s", "\nError in reading or end of file.\n");
 }
