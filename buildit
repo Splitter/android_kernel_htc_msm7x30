@@ -9,6 +9,7 @@ ARCH=arm
 TOOLCHAIN=~/android/Kernel/toolchains/bin/arm-eabi-
 BASE_DIR="$( cd "$( dirname "$0" )" && pwd )"
 DEFCONFIG=speedy_defconfig
+DEFCONFIG_DIR=./arch/arm/configs/
 NUMJOBS=6
 OPTIONS=-o2
 ZIPFILES=zip_template
@@ -23,7 +24,7 @@ while read line; do
   		VERSION=${VERSION[1]}
   		VERSION=${VERSION:1:(${#VERSION}-2)} 
   fi  
-done < ./arch/arm/configs/$DEFCONFIG
+done < $DEFCONFIG_DIR$DEFCONFIG
 
 ZIPNAME=$ZIPPREFIX$VERSION".zip"
 
