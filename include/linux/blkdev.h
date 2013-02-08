@@ -1331,14 +1331,49 @@ static inline int blk_integrity_rq(struct request *rq)
 
 #else /* CONFIG_BLK_DEV_INTEGRITY */
 
-#define blk_integrity_rq(rq)			(0)
-#define blk_rq_count_integrity_sg(a)		(0)
-#define blk_rq_map_integrity_sg(a, b)		(0)
-#define bdev_get_integrity(a)			(0)
-#define blk_get_integrity(a)			(0)
-#define blk_integrity_compare(a, b)		(0)
-#define blk_integrity_register(a, b)		(0)
-#define blk_integrity_unregister(a)		do { } while (0);
+struct bio;
+struct block_device;
+struct gendisk;
+struct blk_integrity;
+
+static inline int blk_integrity_rq(struct request *rq)
+{
+	return 0;
+}
+static inline int blk_rq_count_integrity_sg(struct request_queue *q,struct bio *b)
+{
+	return 0;
+}
+
+static inline int blk_rq_map_integrity_sg(struct request_queue *q,struct bio *b,struct scatterlist *s)
+{
+	return 0;
+}
+
+static inline struct blk_integrity *bdev_get_integrity(struct block_device *b)
+{
+	return 0;
+}
+
+static inline struct blk_integrity *blk_get_integrity(struct gendisk *disk)
+{
+	return NULL;
+}
+
+static inline int blk_integrity_compare(struct gendisk *a, struct gendisk *b)
+{
+	return 0;
+}
+
+static inline int blk_integrity_register(struct gendisk *d,struct blk_integrity *b)
+{
+	return 0;
+}
+
+static inline void blk_integrity_unregister(struct gendisk *d)
+{
+
+}
 
 #endif /* CONFIG_BLK_DEV_INTEGRITY */
 

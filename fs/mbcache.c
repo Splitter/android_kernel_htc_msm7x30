@@ -115,7 +115,7 @@ mb_cache_indexes(struct mb_cache *cache)
  * What the mbcache registers as to get shrunk dynamically.
  */
 
-static int mb_cache_shrink_fn(struct shrinker *shrink, int nr_to_scan, gfp_t gfp_mask);
+static int mb_cache_shrink_fn(struct shrinker *shrink, struct shrink_control *sc);
 
 static struct shrinker mb_cache_shrinker = {
 	.shrink = mb_cache_shrink_fn,
@@ -198,7 +198,7 @@ forget:
  * Returns the number of objects which are present in the cache.
  */
 static int
-mb_cache_shrink_fn(struct shrinker *shrink, int nr_to_scan, gfp_t gfp_mask)
+mb_cache_shrink_fn(struct shrinker *shrink, struct shrink_control *sc)
 {
 	LIST_HEAD(free_list);
 	struct list_head *l, *ltmp;
@@ -213,11 +213,11 @@ mb_cache_shrink_fn(struct shrinker *shrink, int nr_to_scan, gfp_t gfp_mask)
 		count += atomic_read(&cache->c_entry_count);
 	}
 	mb_debug("trying to free %d entries", nr_to_scan);
-	if (nr_to_scan == 0) {
+	if (sc->nr_to_scan == 0) {
 		spin_unlock(&mb_cache_spinlock);
 		goto out;
 	}
-	while (nr_to_scan-- && !list_empty(&mb_cache_lru_list)) {
+	while (sc->nr_to_scan-- && !list_empty(&mb_cache_lru_list)) {
 		struct mb_cache_entry *ce =
 			list_entry(mb_cache_lru_list.next,
 				   struct mb_cache_entry, e_lru_list);
@@ -227,7 +227,7 @@ mb_cache_shrink_fn(struct shrinker *shrink, int nr_to_scan, gfp_t gfp_mask)
 	spin_unlock(&mb_cache_spinlock);
 	list_for_each_safe(l, ltmp, &free_list) {
 		__mb_cache_entry_forget(list_entry(l, struct mb_cache_entry,
-						   e_lru_list), gfp_mask);
+						   e_lru_list), sc->gfp_mask);
 	}
 out:
 	return (count / 100) * sysctl_vfs_cache_pressure;

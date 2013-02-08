@@ -341,7 +341,7 @@ AFLAGS_MODULE   = $(MODFLAGS)
 LDFLAGS_MODULE  = -T $(srctree)/scripts/module-common.lds
 CFLAGS_KERNEL   = \
 		-mcpu=cortex-a8 -mtune=cortex-a8 -march=armv7-a -mfpu=vfpv3 -pipe \
-		-ftree-vectorize -mfloat-abi=hard -fsingle-precision-constant
+		-ftree-vectorize -mfloat-abi=hard -fsingle-precision-constant -Wno-address
 AFLAGS_KERNEL	= $(CFLAGS_KERNEL)
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 

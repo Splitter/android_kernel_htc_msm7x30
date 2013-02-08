@@ -1026,7 +1026,7 @@ unsigned long do_mmap_pgoff(struct file *file, unsigned long addr,
 			mm->def_flags | VM_MAYREAD | VM_MAYWRITE | VM_MAYEXEC;
 
 	/* If uksm is enabled, we add VM_MERGABLE to new VMAs. */
-	uksm_vm_flags_mod(&vm_flags);
+	uksm_vm_flags_mod((unsigned long *)&vm_flags);
 
 	if (flags & MAP_LOCKED)
 		if (!can_do_mlock())

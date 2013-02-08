@@ -1496,16 +1496,16 @@ static bool zcache_freeze;
 /*
  * zcache shrinker interface (only useful for ephemeral pages, so zbud only)
  */
-static int shrink_zcache_memory(struct shrinker *shrink, int nr, gfp_t gfp_mask)
+static int shrink_zcache_memory(struct shrinker *shrink, struct shrink_control *sc)
 {
 	int ret = -1;
-
-	if (nr >= 0) {
-		if (!(gfp_mask & __GFP_FS))
+	
+	if (sc->nr_to_scan >= 0) {
+		if (!(sc->gfp_mask & __GFP_FS))
 			/* does this case really need to be skipped? */
 			goto out;
 		if (spin_trylock(&zcache_direct_reclaim_lock)) {
-			zbud_evict_pages(nr);
+			zbud_evict_pages(sc->nr_to_scan);
 			spin_unlock(&zcache_direct_reclaim_lock);
 		} else
 			zcache_aborted_shrink++;

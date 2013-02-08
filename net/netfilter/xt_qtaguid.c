@@ -34,7 +34,9 @@
 #include "xt_qtaguid_internal.h"
 #include "xt_qtaguid_print.h"
 
+#ifndef pr_warn_once
 #define pr_warn_once printk
+#endif
 /*
  * We only use the xt_socket funcs within a similar context to avoid unexpected
  * return values.
@@ -818,7 +820,7 @@ static int iface_stat_all_proc_read(char *page, char **num_items_returned,
 		if (iface_entry->active) {
 			stats = dev_get_stats(iface_entry->net_dev);
 		} else {
-			stats = &no_dev_stats;
+			stats = (struct net_device_stats *)&no_dev_stats;
 		}
 		len = snprintf(outp, char_count,
 			       "%s %d "
