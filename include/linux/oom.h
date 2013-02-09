@@ -16,6 +16,7 @@
 
 #ifdef __KERNEL__
 
+#include <linux/sched.h>
 #include <linux/memcontrol.h>
 #include <linux/types.h>
 #include <linux/nodemask.h>

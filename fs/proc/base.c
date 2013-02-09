@@ -64,6 +64,7 @@
 #include <linux/mnt_namespace.h>
 #include <linux/mm.h>
 #include <linux/swap.h>
+#include <linux/swap.h>
 #include <linux/rcupdate.h>
 #include <linux/kallsyms.h>
 #include <linux/stacktrace.h>
@@ -438,9 +439,6 @@ static const struct file_operations proc_lstats_operations = {
 static int proc_oom_score(struct task_struct *task, char *buffer)
 {
 	unsigned long points = 0;
-	struct timespec uptime;
-
-	do_posix_clock_monotonic_gettime(&uptime);
 	read_lock(&tasklist_lock);
 	if (pid_alive(task))
 		points = oom_badness(task, NULL, NULL,
