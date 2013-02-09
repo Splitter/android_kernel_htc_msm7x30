@@ -486,10 +486,10 @@ static __always_inline void set_root(struct nameidata *nd)
 {
 	if (!nd->root.mnt) {
 		struct fs_struct *fs = current->fs;
-		read_lock(&fs->lock);
+		spin_lock(&fs->lock);
 		nd->root = fs->root;
 		path_get(&nd->root);
-		read_unlock(&fs->lock);
+		spin_unlock(&fs->lock);
 	}
 }
 
@@ -1017,10 +1017,10 @@ static int path_init(int dfd, const char *name, unsigned int flags, struct namei
 		path_get(&nd->root);
 	} else if (dfd == AT_FDCWD) {
 		struct fs_struct *fs = current->fs;
-		read_lock(&fs->lock);
+		spin_lock(&fs->lock);
 		nd->path = fs->pwd;
 		path_get(&fs->pwd);
-		read_unlock(&fs->lock);
+		spin_unlock(&fs->lock);
 	} else {
 		struct dentry *dentry;
 

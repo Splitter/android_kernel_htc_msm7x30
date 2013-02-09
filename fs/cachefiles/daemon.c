@@ -574,9 +574,9 @@ static int cachefiles_daemon_cull(struct cachefiles_cache *cache, char *args)
 
 	/* extract the directory dentry from the cwd */
 	fs = current->fs;
-	read_lock(&fs->lock);
+	spin_lock(&fs->lock);
 	dir = dget(fs->pwd.dentry);
-	read_unlock(&fs->lock);
+	spin_unlock(&fs->lock);
 
 	if (!S_ISDIR(dir->d_inode->i_mode))
 		goto notdir;
@@ -650,9 +650,9 @@ static int cachefiles_daemon_inuse(struct cachefiles_cache *cache, char *args)
 
 	/* extract the directory dentry from the cwd */
 	fs = current->fs;
-	read_lock(&fs->lock);
+	spin_lock(&fs->lock);
 	dir = dget(fs->pwd.dentry);
-	read_unlock(&fs->lock);
+	spin_unlock(&fs->lock);
 
 	if (!S_ISDIR(dir->d_inode->i_mode))
 		goto notdir;

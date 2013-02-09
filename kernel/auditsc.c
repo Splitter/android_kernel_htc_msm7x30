@@ -1838,10 +1838,10 @@ void __audit_getname(const char *name)
 	context->names[context->name_count].osid = 0;
 	++context->name_count;
 	if (!context->pwd.dentry) {
-		read_lock(&current->fs->lock);
+		spin_lock(&current->fs->lock);
 		context->pwd = current->fs->pwd;
 		path_get(&current->fs->pwd);
-		read_unlock(&current->fs->lock);
+		spin_unlock(&current->fs->lock);
 	}
 
 }
