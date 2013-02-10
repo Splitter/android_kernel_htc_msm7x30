@@ -4,16 +4,7 @@ echo "*********************************************"
 echo "*****   AUTO BUILD & PACKAGE SCRIPT     *****"
 echo "*********************************************"
 
-#OPTIONS : 
-#	clean	 	- run make clean, remove stderr/stdout txt files and zips/files built by script, do not build kernel/zip
-#	debug		- clean up, build kernel normally except redirect stderr/stdout to txt files, do not build flashable zip
-#	noclean		- build kernel normally except do not run 'make clean' or do any clean up first
-#	nocleandebug	- same as debug except do not run 'make clean' or do any clean up first
-#	(none)		- clean up, build kernel then produce flashable zip of kernel
 
-
-
-#GLOBAL OPTIONS
 ARCH=arm
 TOOLCHAIN=~/android/Kernel/toolchains/bin/arm-eabi-
 BASE_DIR="$( cd "$( dirname "$0" )" && pwd )"
@@ -23,8 +14,7 @@ NUMJOBS=6
 OPTIONS=-o2
 ZIPFILES=zip_template
 ZIPPREFIX="JB-Speedy"
-DEBUGTXT_CONFIG=config_debug.txt
-DEBUGTXT_BUILD=build_debug.txt
+
 
 #Pull local version from defconfig and append to zip file name
 while read line; do
@@ -35,127 +25,101 @@ while read line; do
   		VERSION=${VERSION:1:(${#VERSION}-2)} 
   fi  
 done < $DEFCONFIG_DIR$DEFCONFIG
+
 ZIPNAME=$ZIPPREFIX$VERSION".zip"
 
-#function to perform clean up operations
-function cleanIt {
-	echo ""
-	echo "ACTION: make clean -j$NUMJOBS"
-	make clean -j$NUMJOBS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN 
-	echo ""
-	echo "ACTION: remove zip if present..."
-	[ -f $ZIPNAME ] && rm $ZIPNAME
-	echo ""
-	echo "ACTION: remove txt files if present..."
-	[ -f $DEBUGTXT_CONFIG ] && rm $DEBUGTXT_CONFIG
-	[ -f $DEBUGTXT_BUILD ] && rm $DEBUGTXT_BUILD
-}
 
-#function to perform build operations
-function buildIt {	
-	#if 'debug' or 'nocleandebug' then redirect stderr/stdout
-	if ( [[ $1 -eq 0 && $1 == nocleandebug ]] || [[ $1 -eq 0 && $1 == debug ]] );
-		then
-			echo ""
-			echo "ACTION: make $DEFCONFIG"
-			make $DEFCONFIG &> $DEBUGTXT_CONFIG
-			echo ""
-			echo "ACTION:"
-			echo "make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN"
-			make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN &> $DEBUGTXT_BUILD 
-	#othewise just perform normal build
-		else			
-			echo ""
-			echo "ACTION: make $DEFCONFIG"
-			make $DEFCONFIG 
-			echo ""
-			echo "ACTION:"
-			echo "make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN"
-			make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN 	
-	fi			
-}
+echo ""
+echo "beginning build process......"
 
-#function to create flashable zip
-function zipIt {
-	echo ""
-	echo "ACTION: create working directory..."
-	rm -fr tmpdir
-	mkdir tmpdir
 
-	echo ""
-	echo "ACTION: copy package template to working directory..."
-	cp -a $ZIPFILES tmpdir/zipf
-	mkdir tmpdir/zipf/system
-	mkdir tmpdir/zipf/system/lib
-	mkdir tmpdir/zipf/system/lib/modules
-
-	echo ""
-	echo "ACTION: copy kernel image over..."
-	cp arch/arm/boot/zImage tmpdir/zipf/kernel
-
-	echo ""
-	echo "ACTION: copying all modules over..."
-	for j in $(find . -name "*.ko"); do
-	    cp "${j}" tmpdir/zipf/system/lib/modules/
-	done
-
-	echo ""
-	echo "ACTION: creating CWM flashable zip..."
-
-	cd tmpdir/zipf
-	zip -r $ZIPNAME *
-	cp -R $ZIPNAME $BASE_DIR
-	cd ../../
-	rm -fr tmpdir
-
-	echo ""
-	echo ""
-	echo "ACTION: Zip $ZIPNAME built and placed in root dir..."
-
-}
-
-#Clean up if argument calls for it
-if ( [[ $1 -eq 0 && $1 == noclean ]] || [[ $1 -eq 0 && $1 == nocleandebug ]] );
-	then 		
+#Check if 'debug' is passed as arguement
+if [[ $1 -eq 0 && $1 == debug ]]
+	then #DEBUG ENABLED
 		echo ""
-		echo "skipping cleanup..."
-	else
-		echo $1
+		echo "DEBUGGING ENABLED"
+		echo "Rerouting stderr and stdout to txt files during build..."
 		echo ""
-		echo "Beginning clean up..."
-		cleanIt
+		echo "ACTION: make clean -j$NUMJOBS"
+		make clean -j$NUMJOBS
 		echo ""
-		echo "Clean up complete..."		
-fi
+		echo "ACTION: make $DEFCONFIG &> config_debug.txt"
+		make $DEFCONFIG &> config_debug.txt
+		echo ""
+		echo "ACTION:"
+		echo "make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN &> build_debug.txt"
+		make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN &> build_debug.txt
 
-#If argument is 'clean' then don't perform build, otherwise build
-if ( [[ $1 -eq 0 && $1 == clean ]] );
-	then
-		exit
-	else
+	else #DEBUG DISABLED
 		echo ""
-		echo "Beginning build process......"
-		buildIt $1
+		echo "ACTION: make clean -j$NUMJOBS"
+		make clean -j$NUMJOBS
 		echo ""
-		echo "Build finished......"
-fi
+		echo "ACTION: make $DEFCONFIG "
+		make $DEFCONFIG
+		echo ""
+		echo "ACTION:"
+		echo "make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN"
+		make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN
 
-#Create zip if argument calls for it
-if ( [[ $1 -eq 0 && $1 == noclean ]] || [[ !"$1" ]] );
-	then 		
-		echo ""
-		echo "Beginning packaging process......"
-		if [ -e arch/arm/boot/zImage ];
+		#Make sure kernel has been created before trying to create flashable zip
+		if [ -e arch/arm/boot/zImage ]; 
 			then
-				zipIt
 				echo ""
-				echo "Packaging finished......"	
-			else
+				echo "build finished......"
+				echo "beginning packaging process......"
 				echo ""
-				echo "Cannot create package, build must have failed!"
-		fi	
-fi
+				echo "ACTION: create working directory..."
+				rm -fr tmpdir
+				mkdir tmpdir
 
+				echo ""
+				echo "ACTION: copy package template to working directory..."
+				cp -a $ZIPFILES tmpdir/zipf
+				mkdir tmpdir/zipf/system
+				mkdir tmpdir/zipf/system/lib
+				mkdir tmpdir/zipf/system/lib/modules
+
+				echo ""
+				echo "ACTION: copy kernel image over..."
+				cp arch/arm/boot/zImage tmpdir/zipf/kernel
+
+				echo ""
+				echo "ACTION: copying all modules over..."
+				for j in $(find . -name "*.ko"); do
+				    cp "${j}" tmpdir/zipf/system/lib/modules/
+				done
+
+				echo ""
+				echo "ACTION: creating CWM flashable zip..."
+
+				cd tmpdir/zipf
+				zip -r $ZIPNAME *
+				cp -R $ZIPNAME $BASE_DIR
+				cd ../../
+				rm -fr tmpdir
+
+				echo ""
+				echo ""
+				echo "ACTION: Zip $ZIPNAME built and placed in root dir..."
+				echo ""
+				echo ""
+
+
+				echo "*********************************************"
+				echo "*****   BUILD FINISHED!                 *****"
+				echo "*********************************************"
+			
+				
+			else	#Made it through build process and kernel image wasn't created
+				echo ""
+				echo ""
+				echo "BUILD FAILED!@@!!@#!!@!"
+				echo ""
+				echo ""
+		fi
+
+fi
 
 
 
