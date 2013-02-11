@@ -27,26 +27,23 @@ DEBUGTXT_CONFIG=config_debug.txt
 DEBUGTXT_BUILD=build_debug.txt
 
 #Pull local version from defconfig and append to zip file name
-while read line; do
-  if [[ $line == *"CONFIG_LOCALVERSION="* ]]  
-  	then  	
+while read line; do #loop through config
+  if [[ $line == *"CONFIG_LOCALVERSION="* ]]  #check if line defines local version
+  	then  	#copy local version out
   		VERSION=(${line//=/ })
   		VERSION=${VERSION[1]}
   		VERSION=${VERSION:1:(${#VERSION}-2)} 
   fi  
 done < $DEFCONFIG_DIR$DEFCONFIG
-ZIPNAME=$ZIPPREFIX$VERSION".zip"
+ZIPNAME=$ZIPPREFIX$VERSION".zip" #create final zip file name
 
 #function to perform clean up operations
 function cleanIt {
-	echo ""
-	echo "ACTION: make clean -j$NUMJOBS"
-	make clean -j$NUMJOBS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN 
-	echo ""
-	echo "ACTION: remove zip if present..."
-	[ -f $ZIPNAME ] && rm $ZIPNAME
-	echo ""
-	echo "ACTION: remove txt files if present..."
+	echo -e "\nACTION: make clean -j$NUMJOBS"
+	make clean -j$NUMJOBS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN	
+	echo -e "\nACTION: remove zip if present..."
+	[ -f $ZIPNAME ] && rm $ZIPNAME	
+	echo -e "\nACTION: remove txt files if present..."
 	[ -f $DEBUGTXT_CONFIG ] && rm $DEBUGTXT_CONFIG
 	[ -f $DEBUGTXT_BUILD ] && rm $DEBUGTXT_BUILD
 }
@@ -56,76 +53,57 @@ function buildIt {
 	#if 'debug' or 'nocleandebug' then redirect stderr/stdout
 	if ( [[ $1 -eq 0 && $1 == nocleandebug ]] || [[ $1 -eq 0 && $1 == debug ]] );
 		then
-			echo ""
-			echo "ACTION: make $DEFCONFIG"
+			echo -e "\nACTION: make $DEFCONFIG"
 			make $DEFCONFIG &> $DEBUGTXT_CONFIG
-			echo ""
-			echo "ACTION:"
-			echo "make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN"
+			echo -e "\nACTION:make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN \n"
 			make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN &> $DEBUGTXT_BUILD 
 	#othewise just perform normal build
-		else			
-			echo ""
-			echo "ACTION: make $DEFCONFIG"
+		else		
+			echo -e "\nACTION: make $DEFCONFIG"
 			make $DEFCONFIG 
-			echo ""
-			echo "ACTION:"
-			echo "make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN"
+			echo -e "\nACTION:make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN \n"
 			make -j$NUMJOBS $OPTIONS ARCH=$ARCH CROSS_COMPILE=$TOOLCHAIN 	
 	fi			
 }
 
 #function to create flashable zip
 function zipIt {
-	echo ""
-	echo "ACTION: create working directory..."
+	#create neccassary directory structore 
+	echo -e "\nACTION: create working directory..."
 	rm -fr tmpdir
 	mkdir tmpdir
-
-	echo ""
-	echo "ACTION: copy package template to working directory..."
-	cp -a $ZIPFILES tmpdir/zipf
+	echo -e "\nACTION: copy package template to working directory..."
+	cp -a $ZIPFILES tmpdir/zipf #copy over template into working dir
 	mkdir tmpdir/zipf/system
 	mkdir tmpdir/zipf/system/lib
 	mkdir tmpdir/zipf/system/lib/modules
-
-	echo ""
-	echo "ACTION: copy kernel image over..."
+	
+	#copy over kernel and modules
+	echo -e "\nACTION: copy kernel image over..."
 	cp arch/arm/boot/zImage tmpdir/zipf/kernel
-
-	echo ""
-	echo "ACTION: copying all modules over..."
+	echo -e "\nACTION: copying all modules over..."
 	for j in $(find . -name "*.ko"); do
-	    cp "${j}" tmpdir/zipf/system/lib/modules/
+		cp "${j}" tmpdir/zipf/system/lib/modules/
 	done
 
-	echo ""
-	echo "ACTION: creating CWM flashable zip..."
-
+	#create zip and delete working directory
+	echo -e "\nACTION: creating CWM flashable zip..."
 	cd tmpdir/zipf
 	zip -r $ZIPNAME *
 	cp -R $ZIPNAME $BASE_DIR
 	cd ../../
 	rm -fr tmpdir
-
-	echo ""
-	echo ""
-	echo "ACTION: Zip $ZIPNAME built and placed in root dir..."
-
+	echo -e "\n\nACTION: Zip $ZIPNAME built and placed in root dir..."
 }
 
 #Clean up if argument calls for it
 if ( [[ $1 -eq 0 && $1 == noclean ]] || [[ $1 -eq 0 && $1 == nocleandebug ]] );
 	then 		
-		echo ""
-		echo "skipping cleanup..."
+		echo -e "\nskipping cleanup..."
 	else
-		echo $1
-		echo ""
-		echo "Beginning clean up..."
+		echo -e "\nBeginning clean up..."
 		cleanIt
-		echo ""
-		echo "Clean up complete..."		
+		echo -e "\nClean up complete..."		
 fi
 
 #If argument is 'clean' then don't perform build, otherwise build
@@ -133,32 +111,21 @@ if ( [[ $1 -eq 0 && $1 == clean ]] );
 	then
 		exit
 	else
-		echo ""
-		echo "Beginning build process......"
+		echo -e "\nBeginning build process......"
 		buildIt $1
-		echo ""
-		echo "Build finished......"
+		echo -e "\nBuild finished......"
 fi
 
 #Create zip if argument calls for it
 if ( [[ $1 -eq 0 && $1 == noclean ]] || [[ !"$1" ]] );
 	then 		
-		echo ""
-		echo "Beginning packaging process......"
+		echo -e "\nBeginning packaging process......"
 		if [ -e arch/arm/boot/zImage ];
 			then
 				zipIt
-				echo ""
-				echo "Packaging finished......"	
+				echo -e "\nPackaging finished......"	
 			else
-				echo ""
-				echo "Cannot create package, build must have failed!"
+				echo -e "\nCannot create package, build must have failed!"
 		fi	
 fi
-
-
-
-
-
-
 
