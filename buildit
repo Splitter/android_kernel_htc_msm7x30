@@ -9,11 +9,12 @@ echo "*********************************************"
 #	debug		- clean up, build kernel normally except redirect stderr/stdout to txt files, do not build flashable zip
 #	noclean		- build kernel normally except do not run 'make clean' or do any clean up first
 #	nocleandebug	- same as debug except do not run 'make clean' or do any clean up first
+#	zipit		- just build flashable zip of already compiled files
 #	(none)		- clean up, build kernel then produce flashable zip of kernel
 
 
 
-#GLOBAL OPTIONS
+#GLOBAL OPTIONS - edit per build requirements
 ARCH=arm
 TOOLCHAIN=~/android/Kernel/toolchains/bin/arm-eabi-
 BASE_DIR="$( cd "$( dirname "$0" )" && pwd )"
@@ -68,7 +69,7 @@ function buildIt {
 
 #function to create flashable zip
 function zipIt {
-	#create neccassary directory structore 
+	#create neccassary directory structure 
 	echo -e "\nACTION: create working directory..."
 	rm -fr tmpdir
 	mkdir tmpdir
@@ -97,19 +98,19 @@ function zipIt {
 }
 
 #Clean up if argument calls for it
-if ( [[ $1 -eq 0 && $1 == noclean ]] || [[ $1 -eq 0 && $1 == nocleandebug ]] );
+if ( [[ $1 -eq 0 && $1 == noclean ]] || [[ $1 -eq 0 && $1 == nocleandebug ]] || [[ $1 -eq 0 && $1 == zipit ]] );
 	then 		
-		echo -e "\nskipping cleanup..."
+		echo -e "\nSkipping cleanup..."
 	else
 		echo -e "\nBeginning clean up..."
 		cleanIt
 		echo -e "\nClean up complete..."		
 fi
 
-#If argument is 'clean' then don't perform build, otherwise build
-if ( [[ $1 -eq 0 && $1 == clean ]] );
+#If argument is 'clean/zipit' then don't perform build, otherwise build
+if ( [[ $1 -eq 0 && $1 == clean ]] || [[ $1 -eq 0 && $1 == zipit ]] );
 	then
-		exit
+		echo -e "\nSkipping build process..."
 	else
 		echo -e "\nBeginning build process......"
 		buildIt $1
@@ -117,7 +118,7 @@ if ( [[ $1 -eq 0 && $1 == clean ]] );
 fi
 
 #Create zip if argument calls for it
-if ( [[ $1 -eq 0 && $1 == noclean ]] || [[ !"$1" ]] );
+if ( [[ $1 -eq 0 && $1 == noclean ]]|| [[ $1 -eq 0 && $1 == zipit ]] || [[ !"$1" ]] );
 	then 		
 		echo -e "\nBeginning packaging process......"
 		if [ -e arch/arm/boot/zImage ];
@@ -126,6 +127,10 @@ if ( [[ $1 -eq 0 && $1 == noclean ]] || [[ !"$1" ]] );
 				echo -e "\nPackaging finished......"	
 			else
 				echo -e "\nCannot create package, build must have failed!"
-		fi	
+		fi
+	else
+		echo -e "\nSkipping packaging..."	
 fi
+
+echo -e "\nBuild Script has completed!"
 
